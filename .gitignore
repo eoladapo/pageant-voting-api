@@ -1,0 +1,123 @@
+# ═══════════════════════════════════════════
+# DEPENDENCIES
+# ═══════════════════════════════════════════
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ═══════════════════════════════════════════
+# ENVIRONMENT VARIABLES
+# ═══════════════════════════════════════════
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ═══════════════════════════════════════════
+# OPERATING SYSTEM FILES
+# ═══════════════════════════════════════════
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ═══════════════════════════════════════════
+# IDE & EDITOR FILES
+# ═══════════════════════════════════════════
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ═══════════════════════════════════════════
+# LOGS
+# ═══════════════════════════════════════════
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ═══════════════════════════════════════════
+# DOCUMENTATION (EXCLUDE ALL .md EXCEPT README.md)
+# ═══════════════════════════════════════════
+*.md
+!README.md
+
+# ═══════════════════════════════════════════
+# TESTING & COVERAGE
+# ═══════════════════════════════════════════
+coverage/
+.nyc_output/
+*.lcov
+.cache/
+
+# ═══════════════════════════════════════════
+# BUILD & DIST
+# ═══════════════════════════════════════════
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# ═══════════════════════════════════════════
+# TEMPORARY FILES
+# ═══════════════════════════════════════════
+tmp/
+temp/
+*.tmp
+.cache
+
+# ═══════════════════════════════════════════
+# UPLOADED FILES & BACKUPS
+# ═══════════════════════════════════════════
+uploads/
+backup/
+*.bak
+
+# ═══════════════════════════════════════════
+# DATABASE
+# ═══════════════════════════════════════════
+*.sqlite
+*.sqlite3
+*.db
+data/
+mongodb_data/
+
+# ═══════════════════════════════════════════
+# MISC
+# ═══════════════════════════════════════════
+.env.backup
+.env.production
+*.pem
+*.key
+*.crt
+.npmrc
+
+# ═══════════════════════════════════════════
+# CSV/EXCEL SAMPLE FILES (Optional - uncomment to hide)
+# ═══════════════════════════════════════════
+# sample-bulk-upload.csv
+# sample-*.csv
+# *.xlsx
+# *.xls
