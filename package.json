@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "build": "echo 'No build required'",
     "seed": "node src/seed.js",
     "seed:packages": "node src/seedVotePackages.js",
     "seed:admin": "node src/seedAdmin.js"
