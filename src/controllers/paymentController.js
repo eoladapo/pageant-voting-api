@@ -255,7 +255,8 @@ export const initializePayment = async (req, res) => {
     }
 
     // Get vote package or calculate price
-    const pricePerVote = parseFloat(process.env.PRICE_PER_VOTE) || 100;
+    const settings = await AppSettings.getSettings();
+    const pricePerVote = settings.pricePerVote || 100;
     const amount = numberOfVotes * pricePerVote;
 
     // Generate unique reference
@@ -619,7 +620,8 @@ export const getVotePackages = async (req, res) => {
 
     // If no packages exist, return default packages
     if (packages.length === 0) {
-      const pricePerVote = parseFloat(process.env.PRICE_PER_VOTE) || 100;
+      const settings = await AppSettings.getSettings();
+      const pricePerVote = settings.pricePerVote || 100;
       const defaultPackages = [
         { name: '1 Vote', numberOfVotes: 1, price: pricePerVote, currency: 'NGN' },
         { name: '10 Votes', numberOfVotes: 10, price: pricePerVote * 10, currency: 'NGN' },

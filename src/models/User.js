@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Miss', 'Mister', 'Teen'],
+    enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
   },
   socialMedia: {
     instagram: { type: String, trim: true },

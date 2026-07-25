@@ -10,25 +10,43 @@ const seedAdmin = async () => {
   try {
     await connectDB();
 
-    // Check if admin exists
+    // Create first admin
     const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
 
-    if (existingAdmin) {
-      console.log('❌ Admin already exists');
-      process.exit(0);
+    if (!existingAdmin) {
+      const admin = await Admin.create({
+        email: process.env.ADMIN_EMAIL || 'admin@pageant.com',
+        password: process.env.ADMIN_PASSWORD || 'admin123',
+        name: 'Admin User',
+        role: 'admin',
+      });
+
+      console.log('✅ Admin created successfully');
+      console.log('Email:', admin.email);
+      console.log('Password:', process.env.ADMIN_PASSWORD || 'admin123');
+    } else {
+      console.log('ℹ️  Admin already exists:', existingAdmin.email);
     }
 
-    // Create admin
-    const admin = await Admin.create({
-      email: process.env.ADMIN_EMAIL || 'admin@pageant.com',
-      password: process.env.ADMIN_PASSWORD || 'admin123',
-      name: 'Admin User',
-      role: 'admin',
-    });
+    // Create second admin
+    if (process.env.ADMIN_EMAIL_2 && process.env.ADMIN_PASSWORD_2) {
+      const existingAdmin2 = await Admin.findOne({ email: process.env.ADMIN_EMAIL_2 });
 
-    console.log('✅ Admin created successfully');
-    console.log('Email:', admin.email);
-    console.log('Password:', process.env.ADMIN_PASSWORD || 'admin123');
+      if (!existingAdmin2) {
+        const admin2 = await Admin.create({
+          email: process.env.ADMIN_EMAIL_2,
+          password: process.env.ADMIN_PASSWORD_2,
+          name: 'Super Admin',
+          role: 'admin',
+        });
+
+        console.log('✅ Second admin created successfully');
+        console.log('Email:', admin2.email);
+        console.log('Password:', process.env.ADMIN_PASSWORD_2);
+      } else {
+        console.log('ℹ️  Second admin already exists:', existingAdmin2.email);
+      }
+    }
 
     // Create default app settings
     const existingSettings = await AppSettings.findOne();
@@ -41,6 +59,14 @@ const seedAdmin = async () => {
         pricePerVote: parseFloat(process.env.PRICE_PER_VOTE) || 100,
       });
       console.log('✅ Default app settings created');
+    }
+
+    console.log('\n📋 Admin Accounts:');
+    console.log('1. Email:', process.env.ADMIN_EMAIL || 'admin@pageant.com');
+    console.log('   Password:', process.env.ADMIN_PASSWORD || 'admin123');
+    if (process.env.ADMIN_EMAIL_2) {
+      console.log('2. Email:', process.env.ADMIN_EMAIL_2);
+      console.log('   Password:', process.env.ADMIN_PASSWORD_2);
     }
 
     process.exit(0);

@@ -30,7 +30,7 @@ const candidateSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Category is required'],
-    enum: ['Miss', 'Mister', 'Teen'],
+    enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
   },
   socialMedia: {
     instagram: { type: String, trim: true },

@@ -67,7 +67,7 @@ const options = {
             },
             category: {
               type: 'string',
-              enum: ['Miss', 'Mister', 'Teen'],
+              enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
             },
             socialMedia: {
               type: 'object',
@@ -179,7 +179,7 @@ const options = {
                   },
                   category: {
                     type: 'string',
-                    enum: ['Miss', 'Mister', 'Teen'],
+                    enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
                   },
                 },
               },
@@ -223,7 +223,7 @@ const options = {
             },
             category: {
               type: 'string',
-              enum: ['Miss', 'Mister', 'Teen'],
+              enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
               description: 'Pageant category',
             },
             socialMedia: {
@@ -328,7 +328,7 @@ const options = {
             },
             category: {
               type: 'string',
-              enum: ['Miss', 'Mister', 'Teen'],
+              enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
             },
             numberOfVotes: {
               type: 'number',

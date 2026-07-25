@@ -14,7 +14,7 @@ const voteSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Miss', 'Mister', 'Teen'],
+    enum: ['Miss', 'Mister', 'Teen', 'Face of Eminent'],
   },
   numberOfVotes: {
     type: Number,
