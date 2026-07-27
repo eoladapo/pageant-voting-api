@@ -541,7 +541,7 @@ export const addVotesToContestant = async (req, res) => {
     await candidate.save();
 
     // Create admin transaction record
-    await Transaction.create({
+    const transaction = await Transaction.create({
       fullName: 'Admin Override',
       email: req.admin.email,
       phone: 'N/A',
@@ -560,9 +560,9 @@ export const addVotesToContestant = async (req, res) => {
       },
     });
 
-    // Create vote record
+    // Create vote record linked to the transaction
     await Vote.create({
-      transactionId: null,
+      transactionId: transaction._id,
       candidateId: candidate._id,
       category: candidate.category,
       numberOfVotes: votes,
