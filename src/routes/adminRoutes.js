@@ -12,6 +12,14 @@ import {
   bulkUploadUsers,
   addVotesToContestant,
   getDashboardStats,
+  getAllMessages,
+  getMessageById,
+  updateMessage,
+  deleteMessage,
+  getAllQuotes,
+  getQuoteById,
+  updateQuote,
+  deleteQuote,
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { uploadImage, uploadCSV } from '../middleware/uploadMiddleware.js';
@@ -356,5 +364,209 @@ router.post('/users/bulk-upload', protect, uploadCSV, bulkUploadUsers);
  *         description: Votes added successfully
  */
 router.post('/votes/add', protect, addVotesToContestant);
+
+// ═══════════════════════════════════════════
+// CONTACT MESSAGE MANAGEMENT
+// ═══════════════════════════════════════════
+
+/**
+ * @swagger
+ * /api/admin/messages:
+ *   get:
+ *     summary: Get all contact messages with filters
+ *     tags: [Admin Contact Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [new, read, replied, archived]
+ *       - in: query
+ *         name: subject
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Messages retrieved successfully
+ */
+router.get('/messages', protect, getAllMessages);
+
+/**
+ * @swagger
+ * /api/admin/messages/{id}:
+ *   get:
+ *     summary: Get single message by ID
+ *     tags: [Admin Contact Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Message details (automatically marked as read)
+ *       404:
+ *         description: Message not found
+ */
+router.get('/messages/:id', protect, getMessageById);
+
+/**
+ * @swagger
+ * /api/admin/messages/{id}:
+ *   put:
+ *     summary: Update message status or add admin notes
+ *     tags: [Admin Contact Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [new, read, replied, archived]
+ *               adminNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Message updated successfully
+ */
+router.put('/messages/:id', protect, updateMessage);
+
+/**
+ * @swagger
+ * /api/admin/messages/{id}:
+ *   delete:
+ *     summary: Delete message
+ *     tags: [Admin Contact Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Message deleted successfully
+ */
+router.delete('/messages/:id', protect, deleteMessage);
+
+// ═══════════════════════════════════════════
+// QUOTE REQUEST MANAGEMENT
+// ═══════════════════════════════════════════
+
+/**
+ * @swagger
+ * /api/admin/quotes:
+ *   get:
+ *     summary: Get all quote requests
+ *     tags: [Admin Quotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [new, read, quoted, archived]
+ *       - in: query
+ *         name: service
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Quotes retrieved successfully
+ */
+router.get('/quotes', protect, getAllQuotes);
+
+/**
+ * @swagger
+ * /api/admin/quotes/{id}:
+ *   get:
+ *     summary: Get single quote by ID
+ *     tags: [Admin Quotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Quote details
+ */
+router.get('/quotes/:id', protect, getQuoteById);
+
+/**
+ * @swagger
+ * /api/admin/quotes/{id}:
+ *   put:
+ *     summary: Update quote status
+ *     tags: [Admin Quotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [new, read, quoted, archived]
+ *               adminNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Quote updated successfully
+ */
+router.put('/quotes/:id', protect, updateQuote);
+
+/**
+ * @swagger
+ * /api/admin/quotes/{id}:
+ *   delete:
+ *     summary: Delete quote
+ *     tags: [Admin Quotes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Quote deleted successfully
+ */
+router.delete('/quotes/:id', protect, deleteQuote);
 
 export default router;

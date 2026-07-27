@@ -3,6 +3,8 @@ import {
   getRegistrationSettings,
   registerUser,
   getUserById,
+  submitContactMessage,
+  submitQuoteRequest,
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -115,5 +117,108 @@ router.post('/register', registerUser);
  *         description: User not found
  */
 router.get('/:id', getUserById);
+
+/**
+ * @swagger
+ * /api/users/contact:
+ *   post:
+ *     summary: Submit contact form message
+ *     tags: [User Contact]
+ *     description: Submit a message through the contact form
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - subject
+ *               - message
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "John Doe"
+ *               email:
+ *                 type: string
+ *                 example: "john@example.com"
+ *               subject:
+ *                 type: string
+ *                 enum:
+ *                   - Booking / Quote
+ *                   - Press / Media
+ *                   - Modeling Academy
+ *                   - Pageant enquiry
+ *                   - Partnerships
+ *                   - Other
+ *                 example: "Pageant enquiry"
+ *               message:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 2000
+ *                 example: "I would like to know more about the pageant requirements."
+ *     responses:
+ *       201:
+ *         description: Message sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Your message has been sent successfully! We will get back to you soon."
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Validation error
+ */
+router.post('/contact', submitContactMessage);
+
+/**
+ * @swagger
+ * /api/users/quote:
+ *   post:
+ *     summary: Submit quote request
+ *     tags: [User Contact]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - phone
+ *               - service
+ *               - message
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               service:
+ *                 type: string
+ *                 enum:
+ *                   - Videography & Film
+ *                   - Editorial & Cover Features
+ *                   - Branding & Printing
+ *                   - PR & Advertising
+ *                   - Pageant Production
+ *                   - Ushering & Talent
+ *               message:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Quote request submitted successfully
+ */
+router.post('/quote', submitQuoteRequest);
 
 export default router;

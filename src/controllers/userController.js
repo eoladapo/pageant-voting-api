@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import AppSettings from '../models/AppSettings.js';
 import Transaction from '../models/Transaction.js';
+import ContactMessage from '../models/ContactMessage.js';
+import QuoteRequest from '../models/QuoteRequest.js';
 
 /**
  * @desc    Get registration settings
@@ -177,6 +179,133 @@ export const getUserById = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch user',
+    });
+  }
+};
+
+/**
+ * @desc    Submit contact form message
+ * @route   POST /api/users/contact
+ * @access  Public
+ */
+export const submitContactMessage = async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide all required fields: name, email, subject, and message',
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a valid email address',
+      });
+    }
+
+    // Validate subject
+    const validSubjects = [
+      'Booking / Quote',
+      'Press / Media',
+      'Modeling Academy',
+      'Pageant enquiry',
+      'Partnerships',
+      'Other',
+    ];
+
+    if (!validSubjects.includes(subject)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please select a valid subject',
+      });
+    }
+
+    // Validate message length
+    if (message.length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message must be at least 10 characters long',
+      });
+    }
+
+    if (message.length > 2000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message cannot exceed 2000 characters',
+      });
+    }
+
+    // Create contact message
+    const contactMessage = await ContactMessage.create({
+      name,
+      email: email.toLowerCase(),
+      subject,
+      message,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Your message has been sent successfully! We will get back to you soon.',
+      data: {
+        id: contactMessage._id,
+        name: contactMessage.name,
+        email: contactMessage.email,
+        subject: contactMessage.subject,
+        createdAt: contactMessage.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Contact form error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send message',
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * @desc    Submit quote request
+ * @route   POST /api/users/quote
+ * @access  Public
+ */
+export const submitQuoteRequest = async (req, res) => {
+  try {
+    const { name, email, phone, service, message } = req.body;
+
+    if (!name || !email || !phone || !service || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide all required fields',
+      });
+    }
+
+    const quoteRequest = await QuoteRequest.create({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      service,
+      message,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Quote request submitted successfully!',
+      data: {
+        id: quoteRequest._id,
+      },
+    });
+  } catch (error) {
+    console.error('Quote request error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit quote request',
     });
   }
 };

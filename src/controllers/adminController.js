@@ -4,6 +4,8 @@ import Candidate from '../models/Candidate.js';
 import AppSettings from '../models/AppSettings.js';
 import Vote from '../models/vote.js';
 import Transaction from '../models/Transaction.js';
+import ContactMessage from '../models/ContactMessage.js';
+import QuoteRequest from '../models/QuoteRequest.js';
 import jwt from 'jsonwebtoken';
 import { uploadToCloudinary, deleteFromCloudinary } from '../services/cloudinaryService.js';
 import { bulkImportUsers } from '../services/bulkImportService.js';
@@ -640,6 +642,311 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch statistics',
+    });
+  }
+};
+
+// ═══════════════════════════════════════════
+// CONTACT MESSAGE MANAGEMENT
+// ═══════════════════════════════════════════
+
+/**
+ * @desc    Get all contact messages with filters
+ * @route   GET /api/admin/messages
+ * @access  Private (Admin)
+ */
+export const getAllMessages = async (req, res) => {
+  try {
+    const { status, subject, search } = req.query;
+
+    let query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (subject) {
+      query.subject = subject;
+    }
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { message: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const messages = await ContactMessage.find(query).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: messages.length,
+      data: messages,
+    });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch messages',
+    });
+  }
+};
+
+/**
+ * @desc    Get single message by ID
+ * @route   GET /api/admin/messages/:id
+ * @access  Private (Admin)
+ */
+export const getMessageById = async (req, res) => {
+  try {
+    const message = await ContactMessage.findById(req.params.id);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found',
+      });
+    }
+
+    // Mark as read if it's new
+    if (message.status === 'new') {
+      message.status = 'read';
+      message.readAt = new Date();
+      await message.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: message,
+    });
+  } catch (error) {
+    console.error('Error fetching message:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch message',
+    });
+  }
+};
+
+/**
+ * @desc    Update message status or add admin notes
+ * @route   PUT /api/admin/messages/:id
+ * @access  Private (Admin)
+ */
+export const updateMessage = async (req, res) => {
+  try {
+    const message = await ContactMessage.findById(req.params.id);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found',
+      });
+    }
+
+    const { status, adminNotes } = req.body;
+
+    if (status) {
+      message.status = status;
+      if (status === 'replied' && !message.repliedAt) {
+        message.repliedAt = new Date();
+      }
+    }
+
+    if (adminNotes !== undefined) {
+      message.adminNotes = adminNotes;
+    }
+
+    await message.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Message updated successfully',
+      data: message,
+    });
+  } catch (error) {
+    console.error('Error updating message:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update message',
+    });
+  }
+};
+
+/**
+ * @desc    Delete message
+ * @route   DELETE /api/admin/messages/:id
+ * @access  Private (Admin)
+ */
+export const deleteMessage = async (req, res) => {
+  try {
+    const message = await ContactMessage.findById(req.params.id);
+
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: 'Message not found',
+      });
+    }
+
+    await message.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Message deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete message',
+    });
+  }
+};
+
+// ═══════════════════════════════════════════
+// QUOTE REQUEST MANAGEMENT
+// ═══════════════════════════════════════════
+
+/**
+ * @desc    Get all quote requests
+ * @route   GET /api/admin/quotes
+ * @access  Private (Admin)
+ */
+export const getAllQuotes = async (req, res) => {
+  try {
+    const { status, service } = req.query;
+
+    let query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (service) {
+      query.service = service;
+    }
+
+    const quotes = await QuoteRequest.find(query).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: quotes.length,
+      data: quotes,
+    });
+  } catch (error) {
+    console.error('Error fetching quotes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch quotes',
+    });
+  }
+};
+
+/**
+ * @desc    Get single quote by ID
+ * @route   GET /api/admin/quotes/:id
+ * @access  Private (Admin)
+ */
+export const getQuoteById = async (req, res) => {
+  try {
+    const quote = await QuoteRequest.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found',
+      });
+    }
+
+    if (quote.status === 'new') {
+      quote.status = 'read';
+      await quote.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: quote,
+    });
+  } catch (error) {
+    console.error('Error fetching quote:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch quote',
+    });
+  }
+};
+
+/**
+ * @desc    Update quote status
+ * @route   PUT /api/admin/quotes/:id
+ * @access  Private (Admin)
+ */
+export const updateQuote = async (req, res) => {
+  try {
+    const quote = await QuoteRequest.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found',
+      });
+    }
+
+    const { status, adminNotes } = req.body;
+
+    if (status) {
+      quote.status = status;
+    }
+
+    if (adminNotes !== undefined) {
+      quote.adminNotes = adminNotes;
+    }
+
+    await quote.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote updated successfully',
+      data: quote,
+    });
+  } catch (error) {
+    console.error('Error updating quote:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update quote',
+    });
+  }
+};
+
+/**
+ * @desc    Delete quote
+ * @route   DELETE /api/admin/quotes/:id
+ * @access  Private (Admin)
+ */
+export const deleteQuote = async (req, res) => {
+  try {
+    const quote = await QuoteRequest.findById(req.params.id);
+
+    if (!quote) {
+      return res.status(404).json({
+        success: false,
+        error: 'Quote not found',
+      });
+    }
+
+    await quote.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Quote deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting quote:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete quote',
     });
   }
 };
