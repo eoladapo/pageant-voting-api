@@ -5,14 +5,36 @@ import Candidate from '../models/Candidate.js';
  */
 export const getAllCandidates = async (req, res) => {
   try {
+    const { page = 1, limit = 10 } = req.query;
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalCandidates = await Candidate.countDocuments({ isActive: true });
+    const totalPages = Math.ceil(totalCandidates / limitNum);
+
+    // Fetch paginated candidates
     const candidates = await Candidate.find({ isActive: true })
       .populate('userId', 'name email phone')
-      .sort({ category: 1, votes: -1 });
+      .sort({ category: 1, votes: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     res.json({
       success: true,
       count: candidates.length,
       candidates,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalCandidates,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -29,15 +51,37 @@ export const getAllCandidates = async (req, res) => {
 export const getCandidatesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalCandidates = await Candidate.countDocuments({ category, isActive: true });
+    const totalPages = Math.ceil(totalCandidates / limitNum);
+
+    // Fetch paginated candidates
     const candidates = await Candidate.find({ category, isActive: true })
       .populate('userId', 'name email phone')
-      .sort({ votes: -1 });
+      .sort({ votes: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     res.json({
       success: true,
       count: candidates.length,
       category,
       candidates,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalCandidates,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     res.status(500).json({

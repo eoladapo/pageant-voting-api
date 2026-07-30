@@ -561,15 +561,47 @@ export const flutterwaveWebhook = async (req, res) => {
 // ═══════════════════════════════════════════
 export const getAllTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find()
+    const { page = 1, limit = 10, status, purpose } = req.query;
+
+    // Build query
+    let query = {};
+
+    if (status) {
+      query.paymentStatus = status;
+    }
+
+    if (purpose) {
+      query.purpose = purpose;
+    }
+
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalTransactions = await Transaction.countDocuments(query);
+    const totalPages = Math.ceil(totalTransactions / limitNum);
+
+    // Fetch paginated transactions
+    const transactions = await Transaction.find(query)
       .populate('candidateId', 'name category photo')
       .sort({ createdAt: -1 })
-      .limit(100);
+      .skip(skip)
+      .limit(limitNum);
 
     res.status(200).json({
       success: true,
       count: transactions.length,
       transactions,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalTransactions,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     console.error('Get transactions error:', error);

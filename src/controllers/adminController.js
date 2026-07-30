@@ -146,7 +146,7 @@ export const updateSettings = async (req, res) => {
  */
 export const getAllUsers = async (req, res) => {
   try {
-    const { status, paymentStatus, category, search } = req.query;
+    const { status, paymentStatus, category, search, page = 1, limit = 10 } = req.query;
 
     let query = {};
 
@@ -170,12 +170,33 @@ export const getAllUsers = async (req, res) => {
       ];
     }
 
-    const users = await User.find(query).sort({ registeredAt: -1 });
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limitNum);
+
+    // Fetch paginated users
+    const users = await User.find(query)
+      .sort({ registeredAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     res.status(200).json({
       success: true,
       count: users.length,
       data: users,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalUsers,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -619,6 +640,46 @@ export const getDashboardStats = async (req, res) => {
       .limit(5)
       .select('name category votes photo');
 
+    // Get category-specific statistics
+    const categoryStats = await Candidate.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          totalVotes: { $sum: '$votes' },
+          candidates: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Enhance category stats with transactions and voters data
+    const enhancedCategoryStats = await Promise.all(
+      categoryStats.map(async (category) => {
+        // Get all candidate IDs in this category
+        const candidatesInCategory = await Candidate.find({ category: category._id }).select('_id');
+        const candidateIds = candidatesInCategory.map((c) => c._id);
+
+        // Count transactions for this category's candidates
+        const totalTransactions = await Transaction.countDocuments({
+          candidateId: { $in: candidateIds },
+          paymentStatus: 'successful',
+          purpose: 'vote_purchase',
+        });
+
+        // Count unique voters for this category
+        const uniqueVoters = await Vote.distinct('voterEmail', {
+          category: category._id,
+        });
+
+        return {
+          _id: category._id,
+          totalVotes: category.totalVotes,
+          candidates: category.candidates,
+          totalTransactions: totalTransactions,
+          totalVoters: uniqueVoters.length,
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
       data: {
@@ -635,6 +696,7 @@ export const getDashboardStats = async (req, res) => {
           total: totalRevenue[0]?.total || 0,
         },
         topCandidates,
+        categoryStats: enhancedCategoryStats,
       },
     });
   } catch (error) {
@@ -657,7 +719,7 @@ export const getDashboardStats = async (req, res) => {
  */
 export const getAllMessages = async (req, res) => {
   try {
-    const { status, subject, search } = req.query;
+    const { status, subject, search, page = 1, limit = 10 } = req.query;
 
     let query = {};
 
@@ -677,12 +739,33 @@ export const getAllMessages = async (req, res) => {
       ];
     }
 
-    const messages = await ContactMessage.find(query).sort({ createdAt: -1 });
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalMessages = await ContactMessage.countDocuments(query);
+    const totalPages = Math.ceil(totalMessages / limitNum);
+
+    // Fetch paginated messages
+    const messages = await ContactMessage.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     res.status(200).json({
       success: true,
       count: messages.length,
       data: messages,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalMessages,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -816,7 +899,7 @@ export const deleteMessage = async (req, res) => {
  */
 export const getAllQuotes = async (req, res) => {
   try {
-    const { status, service } = req.query;
+    const { status, service, page = 1, limit = 10 } = req.query;
 
     let query = {};
 
@@ -828,12 +911,33 @@ export const getAllQuotes = async (req, res) => {
       query.service = service;
     }
 
-    const quotes = await QuoteRequest.find(query).sort({ createdAt: -1 });
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get total count for pagination metadata
+    const totalQuotes = await QuoteRequest.countDocuments(query);
+    const totalPages = Math.ceil(totalQuotes / limitNum);
+
+    // Fetch paginated quotes
+    const quotes = await QuoteRequest.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     res.status(200).json({
       success: true,
       count: quotes.length,
       data: quotes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        totalItems: totalQuotes,
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
     });
   } catch (error) {
     console.error('Error fetching quotes:', error);
