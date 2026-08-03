@@ -5,6 +5,11 @@ const FLUTTERWAVE_BASE_URL = 'https://api.flutterwave.com/v3';
 
 class FlutterwaveService {
   constructor() {
+    // Debug: Log the secret key format (first 10 chars only for security)
+    console.log('🔑 Flutterwave Secret Key (first 10 chars):', FLUTTERWAVE_SECRET_KEY?.substring(0, 10));
+    console.log('🔑 Secret Key length:', FLUTTERWAVE_SECRET_KEY?.length);
+    console.log('🔑 Secret Key exists:', !!FLUTTERWAVE_SECRET_KEY);
+
     this.axios = axios.create({
       baseURL: FLUTTERWAVE_BASE_URL,
       headers: {
@@ -21,7 +26,11 @@ class FlutterwaveService {
    */
   async initializePayment(data) {
     try {
-      const response = await this.axios.post('/payments', {
+      console.log('🚀 Initializing Flutterwave payment...');
+      console.log('📧 Email:', data.email);
+      console.log('💰 Amount:', data.amount);
+
+      const payload = {
         tx_ref: data.reference,
         amount: data.amount,
         currency: 'NGN',
@@ -33,23 +42,35 @@ class FlutterwaveService {
         },
         customizations: {
           title: 'Pageant Voting',
-          description: `${data.numberOfVotes} vote(s) for candidate`,
+          description: `${data.numberOfVotes || 'Registration'} vote(s) for candidate`,
           logo: 'https://your-logo-url.com/logo.png',
         },
-        meta: {
+      };
+
+      // Add metadata only if it exists
+      if (data.candidateId) {
+        payload.meta = {
           candidateId: data.candidateId,
           numberOfVotes: data.numberOfVotes,
           fullName: data.fullName,
           phone: data.phone,
-        },
-      });
+        };
+      }
+
+      console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
+      const response = await this.axios.post('/payments', payload);
+
+      console.log('✅ Flutterwave response:', response.data);
 
       return {
         success: true,
         data: response.data.data,
       };
     } catch (error) {
-      console.error('Flutterwave initialization error:', error.response?.data || error.message);
+      console.error('❌ Flutterwave initialization error:', error.response?.data || error.message);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error headers:', error.response?.headers);
       throw new Error(error.response?.data?.message || 'Payment initialization failed');
     }
   }

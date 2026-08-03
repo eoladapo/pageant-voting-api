@@ -278,7 +278,7 @@ export const initializePayment = async (req, res) => {
 
     // Initialize payment based on method
     let paymentData;
-    const callbackUrl = `${process.env.CLIENT_URL}/payment/verify?reference=${reference}`;
+    const callbackUrl = `${process.env.CLIENT_URL}/vote/callback?reference=${reference}`;
 
     if (paymentMethod === 'paystack') {
       paymentData = await paystackService.initializePayment({
