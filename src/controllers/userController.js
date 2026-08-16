@@ -19,6 +19,7 @@ export const getRegistrationSettings = async (req, res) => {
         requirePaymentBeforeRegistration: settings.requirePaymentBeforeRegistration,
         registrationFee: settings.registrationFee,
         registrationEnabled: settings.registrationEnabled,
+        votingEnabled: settings.votingEnabled,
       },
     });
   } catch (error) {
