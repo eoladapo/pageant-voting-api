@@ -99,3 +99,62 @@ export const getVoteStatistics = async (req, res) => {
     });
   }
 };
+
+/**
+ * Reset votes for a specific candidate or all candidates
+ * @param {string} req.params.candidateId - Optional candidate ID to reset specific candidate
+ */
+export const resetVotes = async (req, res) => {
+  try {
+    const { candidateId } = req.params;
+
+    if (candidateId) {
+      // Reset votes for a specific candidate
+      const candidate = await Candidate.findById(candidateId);
+
+      if (!candidate) {
+        return res.status(404).json({
+          success: false,
+          error: 'Candidate not found',
+        });
+      }
+
+      // Delete all votes for this candidate
+      const deletedVotes = await Vote.deleteMany({ candidateId });
+
+      // Reset candidate's vote count to 0
+      candidate.votes = 0;
+      await candidate.save();
+
+      res.json({
+        success: true,
+        message: `Votes reset successfully for candidate: ${candidate.name}`,
+        data: {
+          candidateId: candidate._id,
+          candidateName: candidate.name,
+          votesDeleted: deletedVotes.deletedCount,
+          currentVotes: candidate.votes,
+        },
+      });
+    } else {
+      // Reset votes for all candidates
+      const deletedVotes = await Vote.deleteMany({});
+      const updateResult = await Candidate.updateMany({}, { $set: { votes: 0 } });
+
+      res.json({
+        success: true,
+        message: 'All votes have been reset successfully',
+        data: {
+          votesDeleted: deletedVotes.deletedCount,
+          candidatesUpdated: updateResult.modifiedCount,
+        },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to reset votes',
+      message: error.message,
+    });
+  }
+};
