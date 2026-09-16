@@ -440,12 +440,15 @@ export const verifyPayment = async (req, res) => {
             transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
             await transaction.save();
 
+            // Populate candidate for consistent response
+            const candidate = await Candidate.findById(transaction.candidateId);
+
             return res.status(200).json({
               success: true,
               message: `Payment successful but votes not counted. Minimum ${minimumVoteUnit} votes required.`,
               data: {
                 transaction,
-                candidate: transaction.candidateId,
+                candidate: candidate,  // Return full candidate object
                 votesCounted: false,
                 votesPurchased: votesCount,
                 minimumRequired: minimumVoteUnit,
@@ -522,12 +525,15 @@ export const verifyPayment = async (req, res) => {
             transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
             await transaction.save();
 
+            // Populate candidate for consistent response
+            const candidate = await Candidate.findById(transaction.candidateId);
+
             return res.status(200).json({
               success: true,
               message: `Payment successful but votes not counted. Minimum ${minimumVoteUnit} votes required.`,
               data: {
                 transaction,
-                candidate: transaction.candidateId,
+                candidate: candidate,  // Return full candidate object
                 votesCounted: false,
                 votesPurchased: votesCount,
                 minimumRequired: minimumVoteUnit,
