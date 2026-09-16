@@ -115,9 +115,27 @@ router.get('/settings', protect, getSettings);
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/AppSettings'
+ *           example:
+ *             requirePaymentBeforeRegistration: false
+ *             registrationFee: 5000
+ *             votingEnabled: true
+ *             registrationEnabled: true
+ *             pricePerVote: 100
+ *             minimumVoteUnit: 5
  *     responses:
  *       200:
  *         description: Settings updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/AppSettings'
  */
 router.put('/settings', protect, updateSettings);
 

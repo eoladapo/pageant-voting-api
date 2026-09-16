@@ -129,22 +129,40 @@ const options = {
             requirePaymentBeforeRegistration: {
               type: 'boolean',
               default: false,
+              description: 'Whether payment is required before registration',
             },
             registrationFee: {
               type: 'number',
               default: 5000,
+              minimum: 0,
+              description: 'Registration fee amount',
             },
             votingEnabled: {
               type: 'boolean',
               default: true,
+              description: 'Whether voting is currently enabled',
             },
             registrationEnabled: {
               type: 'boolean',
               default: true,
+              description: 'Whether registration is currently enabled',
             },
             pricePerVote: {
               type: 'number',
               default: 100,
+              minimum: 0,
+              description: 'Price per single vote',
+            },
+            minimumVoteUnit: {
+              type: 'number',
+              default: 5,
+              minimum: 1,
+              description: 'Minimum number of votes required for votes to count towards contestant. Votes below this threshold will be paid for but not counted.',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
             },
           },
         },
