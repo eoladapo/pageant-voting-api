@@ -23,6 +23,12 @@ const appSettingsSchema = new mongoose.Schema({
     default: 100,
     min: 0,
   },
+  minimumVoteUnit: {
+    type: Number,
+    default: 5,
+    min: 1,
+    description: 'Minimum number of votes required for votes to count towards contestant. Votes below this threshold will be paid for but not counted.',
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

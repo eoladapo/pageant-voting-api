@@ -396,6 +396,10 @@ export const verifyPayment = async (req, res) => {
 
     let verificationData;
 
+    // Get settings to check minimum vote unit
+    const settings = await AppSettings.getSettings();
+    const minimumVoteUnit = settings.minimumVoteUnit || 5;
+
     // Verify payment based on method
     if (transaction.paymentMethod === 'paystack') {
       verificationData = await paystackService.verifyPayment(reference);
@@ -403,23 +407,50 @@ export const verifyPayment = async (req, res) => {
       if (verificationData.data.status === 'success') {
         // Update transaction
         transaction.paymentStatus = 'successful';
-        transaction.votesApplied = true;
         transaction.metadata = verificationData.data;
-        await transaction.save();
 
-        // Apply votes to candidate
-        const candidate = await Candidate.findById(transaction.candidateId);
-        candidate.votes += transaction.numberOfVotes;
-        await candidate.save();
+        // Check if votes meet minimum threshold
+        const votesCount = transaction.numberOfVotes;
+        const votesCounted = votesCount >= minimumVoteUnit;
 
-        return res.status(200).json({
-          success: true,
-          message: 'Payment verified successfully',
-          data: {
-            transaction,
-            candidate,
-          },
-        });
+        if (votesCounted) {
+          // Apply votes to candidate only if they meet the threshold
+          transaction.votesApplied = true;
+          const candidate = await Candidate.findById(transaction.candidateId);
+          candidate.votes += transaction.numberOfVotes;
+          await candidate.save();
+
+          await transaction.save();
+
+          return res.status(200).json({
+            success: true,
+            message: 'Payment verified successfully',
+            data: {
+              transaction,
+              candidate,
+              votesCounted: true,
+              votesApplied: transaction.numberOfVotes,
+            },
+          });
+        } else {
+          // Payment successful but votes don't count
+          transaction.votesApplied = false;
+          transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
+          await transaction.save();
+
+          return res.status(200).json({
+            success: true,
+            message: `Payment successful but votes not counted. Minimum ${minimumVoteUnit} votes required.`,
+            data: {
+              transaction,
+              candidate: transaction.candidateId,
+              votesCounted: false,
+              votesPurchased: votesCount,
+              minimumRequired: minimumVoteUnit,
+              votesApplied: 0,
+            },
+          });
+        }
       } else {
         transaction.paymentStatus = 'failed';
         await transaction.save();
@@ -440,23 +471,50 @@ export const verifyPayment = async (req, res) => {
       ) {
         // Update transaction
         transaction.paymentStatus = 'successful';
-        transaction.votesApplied = true;
         transaction.metadata = verificationData.data;
-        await transaction.save();
 
-        // Apply votes to candidate
-        const candidate = await Candidate.findById(transaction.candidateId);
-        candidate.votes += transaction.numberOfVotes;
-        await candidate.save();
+        // Check if votes meet minimum threshold
+        const votesCount = transaction.numberOfVotes;
+        const votesCounted = votesCount >= minimumVoteUnit;
 
-        return res.status(200).json({
-          success: true,
-          message: 'Payment verified successfully',
-          data: {
-            transaction,
-            candidate,
-          },
-        });
+        if (votesCounted) {
+          // Apply votes to candidate only if they meet the threshold
+          transaction.votesApplied = true;
+          const candidate = await Candidate.findById(transaction.candidateId);
+          candidate.votes += transaction.numberOfVotes;
+          await candidate.save();
+
+          await transaction.save();
+
+          return res.status(200).json({
+            success: true,
+            message: 'Payment verified successfully',
+            data: {
+              transaction,
+              candidate,
+              votesCounted: true,
+              votesApplied: transaction.numberOfVotes,
+            },
+          });
+        } else {
+          // Payment successful but votes don't count
+          transaction.votesApplied = false;
+          transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
+          await transaction.save();
+
+          return res.status(200).json({
+            success: true,
+            message: `Payment successful but votes not counted. Minimum ${minimumVoteUnit} votes required.`,
+            data: {
+              transaction,
+              candidate: transaction.candidateId,
+              votesCounted: false,
+              votesPurchased: votesCount,
+              minimumRequired: minimumVoteUnit,
+              votesApplied: 0,
+            },
+          });
+        }
       } else {
         transaction.paymentStatus = 'failed';
         await transaction.save();
@@ -490,19 +548,35 @@ export const paystackWebhook = async (req, res) => {
       if (event.event === 'charge.success') {
         const { reference } = event.data;
 
-        // Find and update transaction
+        // Find transaction
         const transaction = await Transaction.findOne({ paymentReference: reference });
 
-        if (transaction && !transaction.votesApplied) {
-          transaction.paymentStatus = 'successful';
-          transaction.votesApplied = true;
-          transaction.metadata = event.data;
-          await transaction.save();
+        if (transaction && !transaction.votesApplied && transaction.paymentStatus !== 'successful') {
+          // Get settings to check minimum vote unit
+          const settings = await AppSettings.getSettings();
+          const minimumVoteUnit = settings.minimumVoteUnit || 5;
 
-          // Apply votes
-          const candidate = await Candidate.findById(transaction.candidateId);
-          candidate.votes += transaction.numberOfVotes;
-          await candidate.save();
+          transaction.paymentStatus = 'successful';
+          transaction.metadata = event.data;
+
+          // Check if votes meet minimum threshold
+          const votesCount = transaction.numberOfVotes;
+          const votesCounted = votesCount >= minimumVoteUnit;
+
+          if (votesCounted) {
+            // Apply votes only if they meet the threshold
+            transaction.votesApplied = true;
+            await transaction.save();
+
+            const candidate = await Candidate.findById(transaction.candidateId);
+            candidate.votes += transaction.numberOfVotes;
+            await candidate.save();
+          } else {
+            // Payment successful but votes don't count
+            transaction.votesApplied = false;
+            transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
+            await transaction.save();
+          }
         }
       }
 
@@ -533,19 +607,35 @@ export const flutterwaveWebhook = async (req, res) => {
     if (payload.event === 'charge.completed' && payload.data.status === 'successful') {
       const { tx_ref } = payload.data;
 
-      // Find and update transaction
+      // Find transaction
       const transaction = await Transaction.findOne({ paymentReference: tx_ref });
 
-      if (transaction && !transaction.votesApplied) {
-        transaction.paymentStatus = 'successful';
-        transaction.votesApplied = true;
-        transaction.metadata = payload.data;
-        await transaction.save();
+      if (transaction && !transaction.votesApplied && transaction.paymentStatus !== 'successful') {
+        // Get settings to check minimum vote unit
+        const settings = await AppSettings.getSettings();
+        const minimumVoteUnit = settings.minimumVoteUnit || 5;
 
-        // Apply votes
-        const candidate = await Candidate.findById(transaction.candidateId);
-        candidate.votes += transaction.numberOfVotes;
-        await candidate.save();
+        transaction.paymentStatus = 'successful';
+        transaction.metadata = payload.data;
+
+        // Check if votes meet minimum threshold
+        const votesCount = transaction.numberOfVotes;
+        const votesCounted = votesCount >= minimumVoteUnit;
+
+        if (votesCounted) {
+          // Apply votes only if they meet the threshold
+          transaction.votesApplied = true;
+          await transaction.save();
+
+          const candidate = await Candidate.findById(transaction.candidateId);
+          candidate.votes += transaction.numberOfVotes;
+          await candidate.save();
+        } else {
+          // Payment successful but votes don't count
+          transaction.votesApplied = false;
+          transaction.metadata.voteNotCountedReason = `Votes below minimum threshold of ${minimumVoteUnit}`;
+          await transaction.save();
+        }
       }
     }
 

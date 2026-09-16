@@ -111,6 +111,7 @@ export const updateSettings = async (req, res) => {
       'votingEnabled',
       'registrationEnabled',
       'pricePerVote',
+      'minimumVoteUnit',
     ];
 
     allowedFields.forEach((field) => {
